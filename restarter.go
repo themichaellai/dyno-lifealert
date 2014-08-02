@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bgentry/heroku-go"
+	"github.com/go-martini/martini"
 	"io/ioutil"
 	"os"
 )
@@ -41,9 +42,17 @@ func main() {
 	args := os.Args[1:]
 	if len(args) > 0 {
 		getApps(heroku)
-	} else {
+		return
+	}
+	m := martini.Classic()
+	m.Get("/", func() string {
+		return "help I've crashed and can't get up"
+	})
+	m.Post("/restart", func() string {
 		if err := heroku.DynoRestartAll(settings["dyno_id"].(string)); err != nil {
 			panic(err)
 		}
-	}
+		return "success"
+	})
+	m.Run()
 }
