@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bgentry/heroku-go"
 	"github.com/go-martini/martini"
+	"github.com/martini-contrib/auth"
 	"io/ioutil"
 	"os"
 )
@@ -45,14 +46,20 @@ func main() {
 		return
 	}
 	m := martini.Classic()
+	m.Use(auth.BasicFunc(func(_, password string) bool {
+		return auth.SecureCompare(password, settings["password"].(string))
+	}))
+
 	m.Get("/", func() string {
 		return "help I've crashed and can't get up"
 	})
+
 	m.Post("/restart", func() string {
 		if err := heroku.DynoRestartAll(settings["dyno_id"].(string)); err != nil {
 			panic(err)
 		}
 		return "success"
 	})
+
 	m.Run()
 }
